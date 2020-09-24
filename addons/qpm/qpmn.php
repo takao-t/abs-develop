@@ -15,6 +15,9 @@ if(!isset($_SESSION['qpm_session']) | !isset($_SESSION['qpm_user'])){
 } else {
     $qpm_user = $_SESSION['qpm_user'];
     $qpm_user_name = $_SESSION['qpm_user_name'];
+    $qpm_lkey_config1 = $_SESSION['qpm_lkey_config1'];
+    $qpm_lkey_config2 = $_SESSION['qpm_lkey_config2'];
+    $qpm_token = $_SESSION['qpm_token'];
 }
 
 ?>
@@ -177,24 +180,71 @@ function msg_number(str) {
     c_log = incoming_msg;
   }
 
-  lcount += 1;
-  if((lcount % 2) != 0) tb_bg ='#FFFFFF';
-  else tb_bg = '#F4F4F4';
 
-  //新規エントリを表に追加
-  table = document.getElementById('histtable');
-  n_row = table.insertRow(2);
-  n_row.bgColor = tb_bg;
-  cell1 = n_row.insertCell(0);
-  cell2 = n_row.insertCell(1);
-  cell3 = n_row.insertCell(2);
-  cell4 = n_row.insertCell(3);
+  // キー情報
+  if(incoming_message[0] == 'KEYINFO'){
 
-  cell1.innerHTML = c_num;
-  cell2.innerHTML = c_name;
-  cell3.innerHTML = c_intime;
-  cell4.innerHTML = c_log;
+    if(qpm_lkey_config1 == '14' | qpm_lkey_config1 == '58'){ //ラインキー使う場合
+ 
+        //テンプレ
+        //<a href="#" class="imsend-button">
 
+        var key_free  = '<a href="#" class="lkey-button">';
+        var key_busy  = '<a href="#" class="lkey-busy-button">';
+        var key_inuse = '<a href="#" class="lkey-inuse-button"> ';
+        var key_ringing = '<a href="#" class="lkey-ringing-button">';
+        var key_close = '</a>';
+
+        //console.log(incoming_message[2]);
+        key_num_info = incoming_message[2].split('-');
+        if(key_num_info.length == 1){
+          key_num = key_num_info[0];
+          num_at_key = '';
+        } else {
+          key_num = key_num_info[0];
+          num_at_key = key_num_info[1];
+        }
+        target_key = 'key' + key_num;
+        key_content = document.getElementById(target_key);
+        //console.log(key_content.innerHTML);
+        if(incoming_message[1] == "INUSE"){
+          button_value = ' 通話:' + num_at_key;
+          key_content.innerHTML = key_inuse + button_value + key_close;
+        }
+        if(incoming_message[1] == "RINGING"){
+          button_value = ' 着信:' + num_at_key;
+          key_content.innerHTML = key_ringing + button_value + key_close;
+        }
+        if(incoming_message[1] == "ONHOLD"){
+          button_value = ' 保留:' + num_at_key;
+          key_content.innerHTML = key_busy + button_value + key_close;
+        }
+        if(incoming_message[1] == "NOT_INUSE"){
+          button_value =  ' 空き';
+          key_content.innerHTML = key_free + button_value + key_close;
+        }
+        //console.log(key_content.innerHTML);
+    }
+
+  } else { //キー情報でなければ表に追加(IM)
+    lcount += 1;
+    if((lcount % 2) != 0) tb_bg ='#FFFFFF';
+    else tb_bg = '#F4F4F4';
+
+    //新規エントリを表に追加
+    table = document.getElementById('histtable');
+    n_row = table.insertRow(2);
+    n_row.bgColor = tb_bg;
+    cell1 = n_row.insertCell(0);
+    cell2 = n_row.insertCell(1);
+    cell3 = n_row.insertCell(2);
+    cell4 = n_row.insertCell(3);
+
+    cell1.innerHTML = c_num;
+    cell2.innerHTML = c_name;
+    cell3.innerHTML = c_intime;
+    cell4.innerHTML = c_log;
+  }
 
 }
 
@@ -235,6 +285,18 @@ if(isset($_POST['c2cext'])){
     //echo $ast_cmd;
     exec_cli_command($ast_cmd);
 }
+//ラインキーC2C
+if(isset($_POST['lkc2c'])){
+    if(trim($_POST['lkc2c']) == "yes"){
+        $key = trim($_POST['keynum']);
+        if(($key>=1) and ($key<=8)){
+            $ast_cmd = 'channel originate Local/' . $qpm_user_ext . '-' . $key . '@c2c-lkey-inside extension *56' . $key . '-' . $qpm_user_ext . '@c2c-linekey';
+            //echo $ast_cmd;
+            exec_cli_command($ast_cmd);
+        }
+    }
+}
+
 
 ?>
 
@@ -243,6 +305,9 @@ if(isset($_POST['c2cext'])){
   var qpm_user = <?php echo json_encode($qpm_user);?>;
   var qpm_user_name = <?php echo json_encode($qpm_user_name);?>;
   var qpm_user_ext = <?php echo json_encode($qpm_user_ext);?>;
+  var qpm_lkey_config1 = <?php echo json_encode($qpm_lkey_config1);?>;
+  var qpm_lkey_config2 = <?php echo json_encode($qpm_lkey_config2);?>;
+  var qpm_token = <?php echo json_encode($qpm_token);?>;
   var qpmd_host = <?php echo json_encode(QPMDHOST);?>;
   var qpmd_port = <?php echo json_encode(QPMDPORT);?>;
   var qpmd_target = 'ws://' + qpmd_host + ':' + qpmd_port;
@@ -275,6 +340,66 @@ if(isset($_POST['c2cext'])){
 	  color: white;
 	}
 
+        .lkey-button {
+          position: relative;
+          display: inline-block;
+          font-weight: bold;
+          padding: 0.25em 0.5em;
+          text-decoration: none;
+          color: #000000;
+          background: #00BC00;
+        }
+
+	.lkey-button:active {
+	  background: #400000;
+	  color: white;
+        }
+
+        .lkey-busy-button {
+          position: relative;
+          display: inline-block;
+          font-weight: bold;
+          padding: 0.25em 0.5em;
+          text-decoration: none;
+          color: #000000;
+          background: #FC6060;
+	}
+
+	.lkey-busy-button:active {
+	  background: #400000;
+	  color: white;
+        }
+
+        .lkey-inuse-button {
+          position: relative;
+          display: inline-block;
+          font-weight: bold;
+          padding: 0.25em 0.5em;
+          text-decoration: none;
+          color: #000000;
+          background: #FCA500;
+        }
+
+	.lkey-inuse-button:active {
+	  background: #400000;
+	  color: white;
+        }
+
+        .lkey-ringing-button {
+          position: relative;
+          display: inline-block;
+          font-weight: bold;
+          padding: 0.25em 0.5em;
+          text-decoration: none;
+          color: #000000;
+          background: #FC00FC;
+        }
+
+	.lkey-ringing-button:active {
+	  background: #400000;
+	  color: white;
+        }
+
         .imext-button {
           position: relative;
           display: inline-block;
@@ -297,6 +422,81 @@ if(isset($_POST['c2cext'])){
 
     </style>
 </div>
+
+<?php
+
+$key_tbl_14 = <<<EOM
+  <tr>
+    <form action="" method="post">
+    <td width=200>
+      <span id="key1">
+       <a href="#" class="lkey-button">1 空き</a>
+      </span>
+    </td>
+    <td width=200>
+      <span id="key2">
+       <a href="#" class="lkey-button">2 空き</a>
+      </span>
+    </td>
+    <td width=200>
+      <span id="key3">
+       <a href="#" class="lkey-button">3 空き</a>
+      </span>
+    </td>
+    <td width=200>
+      <span id="key4">
+       <a href="#" class="lkey-button">4 空き</a>
+      </span>
+    </td>
+    </form>
+  </tr>
+EOM;
+
+$key_tbl_58 = <<<EOM
+  <tr>
+    <form action="" method="post">
+    <td width=200>
+      <span id="key5">
+       <a href="#" class="lkey-button">5 空き</a>
+      </span>
+    </td>
+    <td width=200>
+      <span id="key6">
+       <a href="#" class="lkey-button">6 空き</a>
+      </span>
+    </td>
+    <td width=200>
+      <span id="key7">
+       <a href="#" class="lkey-button">7 空き</a>
+      </span>
+    </td>
+    <td width=200>
+      <span id="key8">
+       <a href="#" class="lkey-button">8 空き</a>
+      </span>
+    </td>
+    </form>
+  </tr>
+EOM;
+
+if(($qpm_lkey_config1 == "14" or $qpm_lkey_config1 == "58") or ($qpm_lkey_config2 == "14" or $qpm_lkey_config2 == "58")){
+    echo '<table border=0 class="pure-table">';
+    if($qpm_lkey_config1 == "14"){
+        echo $key_tbl_14;
+    } else if($qpm_lkey_config1 == "58"){
+        echo $key_tbl_58;
+    }
+    if($qpm_lkey_config2 == "14"){
+        echo $key_tbl_14;
+    } else if($qpm_lkey_config2 == "58"){
+        echo $key_tbl_58;
+    }
+    echo '</table><br>';
+}
+
+echo $qpm_token;
+
+?>
 
 <br>
 <!-- IM入力ボックス -->
@@ -340,6 +540,49 @@ document.getElementById("imsendu").onclick = function() {
   im_send_main();  
 };
 
+document.getElementById("key1").onclick = function() {
+  lkey_c2c('1');
+};
+
+document.getElementById("key2").onclick = function() {
+  lkey_c2c('2');
+};
+
+document.getElementById("key3").onclick = function() {
+  lkey_c2c('3');
+};
+
+document.getElementById("key4").onclick = function() {
+  lkey_c2c('4');
+};
+
+document.getElementById("key5").onclick = function() {
+  lkey_c2c('5');
+};
+
+document.getElementById("key6").onclick = function() {
+  lkey_c2c('6');
+};
+
+document.getElementById("key7").onclick = function() {
+  lkey_c2c('7');
+};
+
+document.getElementById("key8").onclick = function() {
+  lkey_c2c('8');
+};
+
+function lkey_c2c(keynum){
+  myself = location.href;
+  target_url = myself.replace(/#/g,'');
+  console.log(target_url);
+  console.log(keynum,);
+  var XHR = new XMLHttpRequest();
+  XHR.open('POST', target_url,true);
+  XHR.setRequestHeader('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
+  params = "lkc2c=yes" + "&keynum=" + keynum;
+  XHR.send(params);
+};
 
 </script>
 

@@ -29,6 +29,7 @@
 </div>
 
 <?php
+include 'astman.php';
 include 'dbfunctions.php';
 
 $msg_info = '';
@@ -45,6 +46,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     $db_pass_key = DBFUNC\get_db_password($uname);
     $user_name = DBFUNC\u_login_name($uname);
 
+    $lkey_config1 = DBFUNC\get_astdb_item('ABS', 'QPMLK1');
+    $lkey_config2 = DBFUNC\get_astdb_item('ABS', 'QPMLK2');
+
     $msg_info = '<font color="red">ログイン失敗</font>';
     if($ukey === $db_pass_key){
         ini_set('session.gc_maxlifetime', 28800);
@@ -54,6 +58,12 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         $_SESSION['qpm_session'] = "logged_in";
         $_SESSION['qpm_user'] = $uname;
         $_SESSION['qpm_user_name'] = $user_name;
+        $_SESSION['qpm_lkey_config1'] = $lkey_config1;
+        $_SESSION['qpm_lkey_config2'] = $lkey_config2;
+        $now_date = date("YmdHis");
+        $r_val = random_int(0,1000000);
+        $qpm_token = md5($r_val . ':' . $now_date . ':' . $r_val);
+        $_SESSION['qpm_token'] = $qpm_token;
         if(strpos($_SERVER['HTTP_REFERER'], 'login.php') !== false)
           @header('Location: index.php');
           $msg_info = 'ログインしました';

@@ -96,6 +96,16 @@ def message_received(client, server, message):
                 server.send_message_to_all(content2send)
                 # ヒストリに追加
                 history_append(content2send)
+    if condition == 'KEYINFO': #メッセージタイプがKEYINFOならキー情報
+        if p_token == TOKEN:    #適当なものを投げられると面倒なのでtokenで判断
+            #安全のため数字または非通知でなければ無視
+            if content1 == 'INUSE' or content1 == 'NOT_INUSE' or content1 == 'RINGING' or content1 == 'ONHOLD':
+                content1 = tag_eliminate.sub("", content1)
+                # 全クライアント(ブラウザ)にメッセージを送信
+                content2send = 'KEYINFO:' +  content1 + ':' + content2 + ':' + timestamp
+                server.send_message_to_all(content2send)
+                # ヒストリに追加
+                #history_append(content2send)
     if condition == 'INSTANTMSG': #メッセージタイプがIM
         # HTMLタグを除去
         content1 = tag_eliminate.sub("", content1)
