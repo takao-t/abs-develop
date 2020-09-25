@@ -407,6 +407,15 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         }
     }
 
+    if(isset($_POST['function'])){
+        if($_POST['function'] == 'qpmlkfunc'){ //ラインキー機能
+            $p_qpmlk1 = $_POST['qpmlk1'];
+            $p_qpmlk2 = $_POST['qpmlk2'];
+            AbspFunctions\put_db_item('ABS', 'QPMLK1', $p_qpmlk1);
+            AbspFunctions\put_db_item('ABS', 'QPMLK2', $p_qpmlk2);
+        }
+    }
+
 
 } // end of POST
 
@@ -539,6 +548,50 @@ echo <<<EOT
 </select>
 発信時プレフィクス
 <input type="text" size="2" name="qpmc2c_pfx" value="$qpmc2c_pfx">
+<input type="submit" class={$_(ABSPBUTTON)} value="設定">
+</form>
+EOT;
+?>
+
+<?php
+//QPMラインキー
+
+    $qpmlk1_selected = array('0'=>'','1'=>'','2'=>'');
+    $qpmlk2_selected = array('0'=>'','1'=>'','2'=>'');
+    $qpmlk1 = AbspFunctions\get_db_item('ABS', 'QPMLK1');
+    $qpmlk2 = AbspFunctions\get_db_item('ABS', 'QPMLK2');
+    if($qpmlk1 == '14'){
+        $qpmlk1_selected[1] = "selected";
+    } else if($qpmlk1 == '58'){
+        $qpmlk1_selected[2] = "selected";
+    } else {
+        $qpmlk1_selected[0] = "selected";
+    }
+    if($qpmlk2 == '14'){
+        $qpmlk2_selected[1] = "selected";
+    } else if($qpmlk2 == '58'){
+        $qpmlk2_selected[2] = "selected";
+    } else {
+        $qpmlk2_selected[0] = "selected";
+    }
+
+echo <<<EOT
+<br>
+<h3 id="tdis">QPMラインキー機能</h3>
+<form action="" method="POST">
+<input type="hidden" name="function" value="qpmlkfunc">
+上段
+<select name="qpmlk1">
+<option value="0" {$qpmlk1_selected['0']}>使わない</option>
+<option value="14" {$qpmlk1_selected['1']}>1-4</option>
+<option value="58" {$qpmlk1_selected['2']}>5-8</option>
+</select>
+下段
+<select name="qpmlk2">
+<option value="0" {$qpmlk2_selected['0']}>使わない</option>
+<option value="14" {$qpmlk2_selected['1']}>1-4</option>
+<option value="58" {$qpmlk2_selected['2']}>5-8</option>
+</select>
 <input type="submit" class={$_(ABSPBUTTON)} value="設定">
 </form>
 <br>
