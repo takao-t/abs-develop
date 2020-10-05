@@ -10,6 +10,9 @@ $p_disp_name = "";
 $p_ext_num = "";
 $import_result = "";
 
+$qpmlk1 = '';
+$qpmlk2 = '';
+
 
 echo "DBファイル : ";
 echo QPMDB;

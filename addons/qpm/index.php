@@ -93,11 +93,11 @@ $p_attend = "";
 $detail_sheet = '';
 $p_upd_user = '';
 
-$c2c_num = "";
-$c2c_pn1 = "";
-$c2c_pn2 = "";
-$c2c_pn3 = "";
-$c2c_pn4 = "";
+$c2c_num;
+$c2c_pn1;
+$c2c_pn2;
+$c2c_pn3;
+$c2c_pn4;
 
 include 'astman.php';
 include 'zipfunctions.php';
@@ -462,7 +462,7 @@ function click2call($target='',$force_pfx=''){
     else $c2_pfx = DBFUNC\get_astdb_item('ABS', 'QPMC2CPFX');
 
     $target = $c2_pfx . $target;
-    $ast_c2_command = 'channel originate Local/' . $c2_myext . '@c2c-inside extension ' . $target . '@c2c-outside'; 
+    $ast_c2_command = 'channel originate Local/' . $c2_myext . '-' . $target  . '@c2c-inside extension ' . $target . '@c2c-outside'; 
     DBFUNC\exec_cli_command($ast_c2_command);
 }
 

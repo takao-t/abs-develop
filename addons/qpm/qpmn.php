@@ -208,19 +208,19 @@ function msg_number(str) {
         key_content = document.getElementById(target_key);
         //console.log(key_content.innerHTML);
         if(incoming_message[1] == "INUSE"){
-          button_value = ' 通話:' + num_at_key;
+          button_value = key_num + ' 通話:' + num_at_key;
           key_content.innerHTML = key_inuse + button_value + key_close;
         }
         if(incoming_message[1] == "RINGING"){
-          button_value = ' 着信:' + num_at_key;
+          button_value = key_num + ' 着信:' + num_at_key;
           key_content.innerHTML = key_ringing + button_value + key_close;
         }
         if(incoming_message[1] == "ONHOLD"){
-          button_value = ' 保留:' + num_at_key;
+          button_value = key_num + ' 保留:' + num_at_key;
           key_content.innerHTML = key_busy + button_value + key_close;
         }
         if(incoming_message[1] == "NOT_INUSE"){
-          button_value =  ' 空き';
+          button_value =  key_num + ' 空き';
           key_content.innerHTML = key_free + button_value + key_close;
         }
         //console.log(key_content.innerHTML);
@@ -281,18 +281,21 @@ if(isset($_POST['c2cext'])){
     //echo $_POST['extnum'];
     $target_ext = trim($_POST['extnum']);
     //echo $qpm_user_ext;
-    $ast_cmd = 'channel originate Local/' . $qpm_user_ext .'@c2c-inside extension ' . $target_ext . '@c2c-inhouse';
+    $ast_cmd = 'channel originate Local/' . $qpm_user_ext . '-' . $target_ext . '@c2c-inside extension ' . $target_ext . '@c2c-inhouse';
     //echo $ast_cmd;
     exec_cli_command($ast_cmd);
 }
 //ラインキーC2C
 if(isset($_POST['lkc2c'])){
     if(trim($_POST['lkc2c']) == "yes"){
-        $key = trim($_POST['keynum']);
-        if(($key>=1) and ($key<=8)){
-            $ast_cmd = 'channel originate Local/' . $qpm_user_ext . '-' . $key . '@c2c-lkey-inside extension *56' . $key . '-' . $qpm_user_ext . '@c2c-linekey';
-            //echo $ast_cmd;
-            exec_cli_command($ast_cmd);
+        $p_token = trim($_POST['token']);
+        if($p_token == $qpm_token){
+            $key = trim($_POST['keynum']);
+            if(($key>=1) and ($key<=8)){
+                $ast_cmd = 'channel originate Local/' . $qpm_user_ext . '-' . $key . '@c2c-lkey-inside extension *56' . $key . '-' . $qpm_user_ext . '@c2c-linekey';
+                //echo $ast_cmd;
+                exec_cli_command($ast_cmd);
+            }
         }
     }
 }
@@ -479,22 +482,22 @@ $key_tbl_58 = <<<EOM
   </tr>
 EOM;
 
-if(($qpm_lkey_config1 == "14" or $qpm_lkey_config1 == "58") or ($qpm_lkey_config2 == "14" or $qpm_lkey_config2 == "58")){
-    echo '<table border=0 class="pure-table">';
-    if($qpm_lkey_config1 == "14"){
-        echo $key_tbl_14;
-    } else if($qpm_lkey_config1 == "58"){
-        echo $key_tbl_58;
+if($qpm_user_ext != ""){
+    if(($qpm_lkey_config1 == "14" or $qpm_lkey_config1 == "58") or ($qpm_lkey_config2 == "14" or $qpm_lkey_config2 == "58")){
+        echo '<table border=0 class="pure-table">';
+        if($qpm_lkey_config1 == "14"){
+            echo $key_tbl_14;
+        } else if($qpm_lkey_config1 == "58"){
+            echo $key_tbl_58;
+        }
+        if($qpm_lkey_config2 == "14"){
+            echo $key_tbl_14;
+        } else if($qpm_lkey_config2 == "58"){
+            echo $key_tbl_58;
+        }
+        echo '</table><br>';
     }
-    if($qpm_lkey_config2 == "14"){
-        echo $key_tbl_14;
-    } else if($qpm_lkey_config2 == "58"){
-        echo $key_tbl_58;
-    }
-    echo '</table><br>';
 }
-
-echo $qpm_token;
 
 ?>
 
@@ -580,7 +583,7 @@ function lkey_c2c(keynum){
   var XHR = new XMLHttpRequest();
   XHR.open('POST', target_url,true);
   XHR.setRequestHeader('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
-  params = "lkc2c=yes" + "&keynum=" + keynum;
+  params = "lkc2c=yes" + "&keynum=" + keynum + "&token=" + qpm_token;
   XHR.send(params);
 };
 
